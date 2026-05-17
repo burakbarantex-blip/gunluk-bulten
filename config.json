@@ -1,0 +1,19 @@
+{
+    "email": {
+        "sender": "burak.barantex@gmail.com",
+        "app_password": "uavw udfa pztt csvn",
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 465
+    },
+    "recipients": [
+        "burak.baran@gumussuyu.com.tr",
+        "gonca.yuca@gumussuyu.com.tr",
+        "nihal.keskin@gumussuyu.com.tr",
+        "mustafa.copur@gumussuyu.com.tr",
+        "ibrahim.guney@gumussuyu.com.tr",
+        "onur.cekic@gumussuyu.com.tr",
+        "lutfi.genc@gumussuyu.com.tr",
+        "mustafa.tedik@boyteks.com"
+    ],
+    "company_name": "Satınalma & Piyasa Analiz"
+}
