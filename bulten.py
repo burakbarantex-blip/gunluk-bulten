@@ -595,39 +595,51 @@ def build_html(fin, analysis, today_str):
 </body></html>"""
     return html
 
-# ─── 5. E-POSTA GÖNDER ─────────────────────────────────────────────────────
+# ─── 5. E-POSTA GÖNDER (Resend API) ───────────────────────────────────────
 
 def send_email(cfg, subject, html_body):
-    sender     = cfg["email"]["sender"]
-    password   = cfg["email"]["app_password"]
-    smtp_srv   = cfg["email"]["smtp_server"]
-    smtp_port  = cfg["email"]["smtp_port"]
     recipients = cfg["recipients"]
+    sender     = cfg["email"]["sender"]
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"]    = f"Piyasa Analiz <{sender}>"
-    msg["To"]      = ", ".join(recipients)
-    msg.attach(MIMEText(html_body, "html", "utf-8"))
+    # Resend API key — Railway Variables'dan al
+    resend_key = os.environ.get("RESEND_API_KEY")
+    if not resend_key:
+        log.error("RESEND_API_KEY ortam değişkeni bulunamadı!")
+        return False
 
-    ctx = ssl.create_default_context()
     try:
-        # Önce port 587 (TLS) dene — Railway'de 465 engellenebilir
-        try:
-            with smtplib.SMTP(smtp_srv, 587) as srv:
-                srv.ehlo()
-                srv.starttls(context=ctx)
-                srv.login(sender, password)
-                srv.sendmail(sender, recipients, msg.as_string())
-            log.info(f"E-posta {len(recipients)} kişiye gönderildi (port 587).")
+        # Resend API'ye HTTP POST — her alıcıya ayrı gönder
+        headers = {
+            "Authorization": f"Bearer {resend_key}",
+            "Content-Type": "application/json",
+        }
+        success_count = 0
+        for recipient in recipients:
+            payload = {
+                "from": f"Piyasa Analiz <onboarding@resend.dev>",
+                "to": [recipient],
+                "subject": subject,
+                "html": html_body,
+            }
+            resp = requests.post(
+                "https://api.resend.com/emails",
+                json=payload,
+                headers=headers,
+                timeout=30,
+            )
+            if resp.status_code in (200, 201):
+                success_count += 1
+                log.info(f"  ✓ Gönderildi: {recipient}")
+            else:
+                log.error(f"  ✗ Hata [{recipient}]: {resp.status_code} — {resp.text}")
+
+        if success_count > 0:
+            log.info(f"E-posta {success_count}/{len(recipients)} kişiye gönderildi.")
             return True
-        except Exception as e1:
-            log.warning(f"Port 587 başarısız: {e1} — port 465 deneniyor...")
-            with smtplib.SMTP_SSL(smtp_srv, 465, context=ctx) as srv:
-                srv.login(sender, password)
-                srv.sendmail(sender, recipients, msg.as_string())
-            log.info(f"E-posta {len(recipients)} kişiye gönderildi (port 465).")
-            return True
+        else:
+            log.error("Hiçbir alıcıya gönderilemedi.")
+            return False
+
     except Exception as e:
         log.error(f"E-posta gönderilemedi: {e}")
         return False
