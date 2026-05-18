@@ -273,7 +273,6 @@ def run_claude_analysis(prompt):
         response = client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=2000,
-            tools=[{"type": "web_search_20250305", "name": "web_search"}],
             system=(
                 "Sen Türkiye'nin en iyi satınalma ve hammadde piyasası uzmanısın. "
                 "PP, PTA, MEG, viskoz, polyester, navlun ve halı sektörü konularında derinlemesine bilgin var.\n\n"
@@ -495,21 +494,21 @@ def build_html(fin, analysis, today_str):
     </tr>
     <tr>
       <td><b>Naphtha Singapur</b></td>
-      <td>{ups.get('naphtha_singapur',{{}}).get('fiyat','—')}</td>
-      <td style="font-size:18px;color:{trend_color(ups.get('naphtha_singapur',{{}}).get('yon','→'))};">{ups.get('naphtha_singapur',{{}}).get('yon','→')}</td>
-      <td>{ups.get('naphtha_singapur',{{}}).get('yorum','—')}</td>
+      <td>{ups.get('naphtha_singapur', {}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(ups.get('naphtha_singapur', {}).get('yon','→'))};">{ups.get('naphtha_singapur', {}).get('yon','→')}</td>
+      <td>{ups.get('naphtha_singapur', {}).get('yorum','—')}</td>
     </tr>
     <tr style="background:#f9f9f9;">
       <td><b>Naphtha ARA</b></td>
-      <td>{ups.get('naphtha_ara',{{}}).get('fiyat','—')}</td>
-      <td style="font-size:18px;color:{trend_color(ups.get('naphtha_ara',{{}}).get('yon','→'))};">{ups.get('naphtha_ara',{{}}).get('yon','→')}</td>
-      <td>{ups.get('naphtha_ara',{{}}).get('yorum','—')}</td>
+      <td>{ups.get('naphtha_ara', {}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(ups.get('naphtha_ara', {}).get('yon','→'))};">{ups.get('naphtha_ara', {}).get('yon','→')}</td>
+      <td>{ups.get('naphtha_ara', {}).get('yorum','—')}</td>
     </tr>
     <tr>
       <td><b>Propilen</b></td>
-      <td>{ups.get('propilen',{{}}).get('fiyat','—')}</td>
-      <td style="font-size:18px;color:{trend_color(ups.get('propilen',{{}}).get('yon','→'))};">{ups.get('propilen',{{}}).get('yon','→')}</td>
-      <td>{ups.get('propilen',{{}}).get('yorum','—')}</td>
+      <td>{ups.get('propilen', {}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(ups.get('propilen', {}).get('yon','→'))};">{ups.get('propilen', {}).get('yon','→')}</td>
+      <td>{ups.get('propilen', {}).get('yorum','—')}</td>
     </tr>
   </table>
   <table width="100%" cellpadding="8" cellspacing="0" style="font-size:12px;border-collapse:collapse;border:1px solid #e0e0e0;margin-top:6px;">
@@ -521,15 +520,15 @@ def build_html(fin, analysis, today_str):
     </tr>
     <tr>
       <td><b>Dalian PP Futures</b></td>
-      <td>{asya.get('dalian_pp_futures',{{}}).get('fiyat','—')}</td>
-      <td style="font-size:18px;color:{trend_color(asya.get('dalian_pp_futures',{{}}).get('yon','→'))};">{asya.get('dalian_pp_futures',{{}}).get('yon','→')}</td>
-      <td>{asya.get('dalian_pp_futures',{{}}).get('yorum','—')}</td>
+      <td>{asya.get('dalian_pp_futures', {}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(asya.get('dalian_pp_futures', {}).get('yon','→'))};">{asya.get('dalian_pp_futures', {}).get('yon','→')}</td>
+      <td>{asya.get('dalian_pp_futures', {}).get('yorum','—')}</td>
     </tr>
     <tr style="background:#f9f9f9;">
       <td><b>USD/CNY</b></td>
-      <td>{asya.get('usd_cny',{{}}).get('fiyat','—')}</td>
-      <td style="font-size:18px;color:{trend_color(asya.get('usd_cny',{{}}).get('yon','→'))};">{asya.get('usd_cny',{{}}).get('yon','→')}</td>
-      <td>{asya.get('usd_cny',{{}}).get('yorum','—')}</td>
+      <td>{asya.get('usd_cny', {}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(asya.get('usd_cny', {}).get('yon','→'))};">{asya.get('usd_cny', {}).get('yon','→')}</td>
+      <td>{asya.get('usd_cny', {}).get('yorum','—')}</td>
     </tr>
   </table>
 </td></tr>
