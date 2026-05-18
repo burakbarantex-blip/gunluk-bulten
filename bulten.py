@@ -233,7 +233,7 @@ def run_claude_analysis(prompt):
         log.info("  Claude API'ye istek gönderiliyor...")
         response = client.messages.create(
             model="claude-sonnet-4-5",
-            max_tokens=2000,
+            max_tokens=3000,
             system=(
                 "Sen Türkiye'nin en iyi satınalma ve hammadde piyasası uzmanısın. "
                 "PP, PTA, MEG, viskoz, polyester, navlun ve halı sektörü konularında derinlemesine bilgin var.\n\n"
@@ -615,9 +615,12 @@ def send_email(cfg, subject, html_body):
         }
         success_count = 0
         for recipient in recipients:
+            # Resend ücretsiz planda sadece kayıtlı adrese gönderilebilir
+            # Domain doğrulanana kadar test adresi kullan
+            test_recipient = os.environ.get("TEST_EMAIL", recipient)
             payload = {
-                "from": f"Piyasa Analiz <onboarding@resend.dev>",
-                "to": [recipient],
+                "from": "Piyasa Analiz <onboarding@resend.dev>",
+                "to": [test_recipient],
                 "subject": subject,
                 "html": html_body,
             }
