@@ -170,92 +170,53 @@ def build_analysis_prompt(fin_data, news_items, today_str):
             d = fin_data[k]
             fin_summary.append(f"- {lbl}: {d['price']} (değişim: %{d['change']:+.2f})")
 
+    # Sadece ilk 5 haberi kısa özet olarak ekle
     news_text = ""
-    for n in news_items[:10]:
-        news_text += f"[{n['source'].upper()}] {n['title']}\n"
-        if n["summary"]:
-            news_text += f"  Özet: {n['summary'][:100]}\n"
+    for n in news_items[:5]:
+        news_text += f"- [{n['source'].upper()}] {n['title']}\n"
 
-    prompt = f"""Sen Türkiye'nin önde gelen satınalma ve uluslararası ticaret uzmanısın.
-Bugün {today_str} tarihli günlük bülteni hazırlıyorsun.
-Şirket: Gümuşsuyu (halı, tekstil hammaddeleri ithalatçısı — PP, PTA, MEG, viskoz, polyester)
+    prompt = f"""Tarih: {today_str}
+Şirket: Gümuşsuyu (halı/tekstil hammadde ithalatçısı — PP, PTA, MEG, viskoz, polyester)
 
-──── FİNANSAL VERİLER (otomatik çekildi) ────
+Finansal veriler:
 {chr(10).join(fin_summary)}
 
-──── GÜNCEL HABERLER ────
+Haberler:
 {news_text}
 
-──── ANALİZ TALİMATLARI ────
-1. UPSTREAM PROXY: Brent/Naphtha → Propilen → PP zincirini analiz et. 
-   Brent hareketi PP için 4-8 hafta öncül sinyal verir. Web'den güncel Naphtha (Singapur/ARA) fiyatını ara.
-2. DALIAN FUTURES: Çin Dalian PP futures'ını web'den ara — Asya talep yönünü belirle.
-3. ÜRETİCİ HABERLERİ: SABIC, Borealis, LyondellBasell'den kapasite/force majeure/bakım haberi var mı? Ara.
-4. DREWRY & FREİGHTOS: Güncel World Container Index ve Freightos Baltic Index değerlerini ara.
-5. ICIS/POLYMERUPDATE/CHEMANALYST: Bu kaynakların serbest PP/PTA/MEG başlıklarını ara ve değerlendir.
-
-Aşağıdaki JSON formatında yanıt ver:
+Aşağıdaki JSON'u Türkçe doldur. SADECE JSON döndür:
 
 {{
-  "ozet": "3-4 cümle yönetici özeti. Upstream proxy sinyali, Asya talebi ve kritik üretici haberleri dahil.",
-
-  "upstream_proxy": {{
-    "naphtha_singapur": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "PP fiyatına 4-8 haftalık etkisi"}},
-    "naphtha_ara": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Avrupa naphtha durumu"}},
-    "propilen": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "PP hammaddesi doğrudan etki"}}
-  }},
-
-  "asya_sinyali": {{
-    "dalian_pp_futures": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin talep yönü"}},
-    "usd_cny": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin'den ithalat maliyet etkisi"}}
-  }},
-
-  "uretici_sinyalleri": [
-    {{"uretici": "SABIC/Borealis/LyondellBasell vb.", "haber": "...", "etki": "arz üzerine etkisi"}}
-  ],
-
-  "dunya_gundemi": [
-    {{"baslik": "...", "kaynak": "...", "onemi": "satınalma/ithalat açısından önemi"}}
-  ],
-
+  "ozet": "2-3 cümle özet",
+  "dunya_gundemi": [{{"baslik":"..","kaynak":"..","onemi":".."}}],
   "hammadde_analiz": {{
-    "pp": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "upstream proxy ve Dalian sinyali dahil yorum"}},
-    "pta": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
-    "meg": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
-    "akrilonitril": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
-    "viskoz": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
-    "polyester_dty": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
-    "pvc": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}}
+    "pp":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "pta":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "meg":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "akrilonitril":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "viskoz":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "polyester_dty":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "pvc":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
   }},
-
+  "upstream_proxy": {{
+    "naphtha_singapur":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "naphtha_ara":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "propilen":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
+  }},
+  "asya_sinyali": {{
+    "dalian_pp_futures":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "usd_cny":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
+  }},
+  "uretici_sinyalleri": [{{"uretici":"..","haber":"..","etki":".."}}],
   "lojistik": {{
-    "drewry_wci": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Drewry World Container Index"}},
-    "freightos_fbi": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Freightos Baltic Index"}},
-    "konteyner_40hq": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin→Türkiye pratik maliyet"}}
+    "drewry_wci":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "freightos_fbi":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
+    "konteyner_40hq":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
   }},
-
-  "hali_sektoru": {{
-    "gelismeler": ["madde 1", "madde 2", "madde 3"],
-    "hammadde_etkisi": "PP/polyester fiyatlarının halı üretimine etkisi"
-  }},
-
-  "sektorel_analiz": {{
-    "baslik": "günün en kritik sektörel başlığı",
-    "maddeler": ["madde 1", "madde 2", "madde 3"],
-    "oneri": "satınalma ekibi için somut aksiyon önerisi — stok, zamanlama, tedarikçi"
-  }},
-
-  "kaynak_ozetleri": {{
-    "icis": "ICIS'ten PP/PTA/MEG kritik başlık",
-    "polymerupdate": "Polymerupdate'ten güncel fiyat hareketi",
-    "chemanalyst": "ChemAnalyst'ten öne çıkan analiz",
-    "fibre2fashion": "Fibre2Fashion'dan tekstil/lif gelişmesi",
-    "chemorbis": "ChemOrbis'ten polimer piyasa yorumu",
-    "sedatsezer": "Sedat Sezer'den güncel video/yorum özeti"
-  }}
-}}
-
-SADECE JSON döndür. Hiçbir açıklama veya markdown ekleme."""
+  "hali_sektoru":{{"gelismeler":["..",".."],"hammadde_etkisi":".."}},
+  "sektorel_analiz":{{"baslik":"..","maddeler":["..",".."],"oneri":".."}},
+  "kaynak_ozetleri":{{"icis":"..","polymerupdate":"..","chemanalyst":"..","fibre2fashion":"..","chemorbis":"..","sedatsezer":".."}}
+}}"""
     return prompt
 
 
