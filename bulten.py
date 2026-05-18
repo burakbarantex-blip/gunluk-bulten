@@ -51,11 +51,13 @@ def load_config():
 def fetch_financial():
     """Döviz, petrol, altın, pamuk verilerini yfinance ile çek."""
     tickers = {
-        "brent":    "BZ=F",
-        "gold_oz":  "GC=F",
-        "cotton":   "CT=F",
-        "usd_try":  "USDTRY=X",
-        "eur_try":  "EURTRY=X",
+        "brent":    "BZ=F",       # Brent ham petrol — PP upstream proxy (öncül gösterge)
+        "wti":      "CL=F",       # WTI petrol — naphtha korelasyonu
+        "gold_oz":  "GC=F",       # Altın ons
+        "cotton":   "CT=F",       # Pamuk ICE
+        "usd_try":  "USDTRY=X",   # USD/TRY
+        "eur_try":  "EURTRY=X",   # EUR/TRY
+        "usd_cny":  "USDCNH=X",   # USD/CNY — Çin tedarik maliyeti sinyali
     }
     data = {}
     for key, sym in tickers.items():
@@ -84,18 +86,44 @@ def fetch_financial():
 # ─── 2. SEKTÖREL HABERLER (RSS + Web) ──────────────────────────────────────
 
 FEEDS = [
-    # Genel ekonomi
-    ("google_tr",       "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FuUnlHZ0pVVWlnQVAB?hl=tr&gl=TR&ceid=TR:tr"),
-    ("bloomberght",     "https://www.bloomberght.com/rss"),
-    # Tekstil & lif
-    ("fibre2fashion",   "https://www.fibre2fashion.com/rss/news.xml"),
-    ("fibre2fashion_m", "https://www.fibre2fashion.com/rss/market-report.xml"),
-    # Petrokimya & hammadde
-    ("chemorbis",       "https://www.chemorbis.com/en/rss/news"),
-    ("chemorbis_pp",    "https://www.chemorbis.com/en/rss/polypropylene"),
-    ("chemorbis_pet",   "https://www.chemorbis.com/en/rss/pet"),
-    # Sedat Sezer (YouTube RSS)
-    ("sedatsezer_yt",   "https://www.youtube.com/feeds/videos.xml?channel_id=UCmVBmHxFwfCnWqhBMM7gPFQ"),
+    # ── Genel ekonomi ──────────────────────────────────────────────────────
+    ("google_tr",        "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FuUnlHZ0pVVWlnQVAB?hl=tr&gl=TR&ceid=TR:tr"),
+    ("bloomberght",      "https://www.bloomberght.com/rss"),
+
+    # ── Tekstil & Lif ──────────────────────────────────────────────────────
+    ("fibre2fashion",    "https://www.fibre2fashion.com/rss/news.xml"),
+    ("fibre2fashion_m",  "https://www.fibre2fashion.com/rss/market-report.xml"),
+
+    # ── Petrokimya — ChemOrbis YouTube (web RSS üyelik gerektiriyor) ───────
+    ("chemorbis_yt",     "https://www.youtube.com/feeds/videos.xml?channel_id=UCdHqNUDFJBrlNmqaxLQLaSQ"),
+
+    # ── Sedat Sezer — Tekstil & Tedarik Zinciri (doğrulanmış) ─────────────
+    ("sedatsezer_yt",    "https://www.youtube.com/feeds/videos.xml?channel_id=UCVann0hVvoJdPH_XK9rW1ww"),
+
+    # ── Upstream Proxy — Brent & Naphtha haberleri (PP öncül göstergesi) ──
+    ("google_brent",     "https://news.google.com/rss/search?q=brent+crude+naphtha+price&hl=en&gl=US&ceid=US:en"),
+    ("google_naphtha",   "https://news.google.com/rss/search?q=naphtha+singapore+ARA+price&hl=en&gl=US&ceid=US:en"),
+
+    # ── Asya Futures — Dalian PP futures (Çin talep sinyali) ──────────────
+    ("google_dalian",    "https://news.google.com/rss/search?q=Dalian+polypropylene+futures&hl=en&gl=US&ceid=US:en"),
+
+    # ── Üretici Sinyalleri — SABIC, Borealis, LyondellBasell ──────────────
+    ("google_sabic",     "https://news.google.com/rss/search?q=SABIC+polypropylene+capacity+force+majeure&hl=en&gl=US&ceid=US:en"),
+    ("google_producer",  "https://news.google.com/rss/search?q=Borealis+LyondellBasell+PP+production&hl=en&gl=US&ceid=US:en"),
+
+    # ── Lojistik — Drewry & Freightos ─────────────────────────────────────
+    ("drewry",           "https://www.drewry.co.uk/rss"),
+    ("google_drewry",    "https://news.google.com/rss/search?q=Drewry+World+Container+Index+freight&hl=en&gl=US&ceid=US:en"),
+    ("google_freightos", "https://news.google.com/rss/search?q=Freightos+Baltic+Index+container+rate&hl=en&gl=US&ceid=US:en"),
+
+    # ── Haber & Yorum — ICIS, Polymerupdate, ChemAnalyst ──────────────────
+    ("google_icis",      "https://news.google.com/rss/search?q=ICIS+polypropylene+polyester+price&hl=en&gl=US&ceid=US:en"),
+    ("google_polymerup", "https://news.google.com/rss/search?q=Polymerupdate+PP+PTA+MEG&hl=en&gl=US&ceid=US:en"),
+    ("google_chemanalyst","https://news.google.com/rss/search?q=ChemAnalyst+polypropylene+price&hl=en&gl=US&ceid=US:en"),
+
+    # ── PP & Petrokimya Genel ──────────────────────────────────────────────
+    ("google_pp",        "https://news.google.com/rss/search?q=polypropylene+price&hl=en&gl=US&ceid=US:en"),
+    ("google_tekstil",   "https://news.google.com/rss/search?q=tekstil+hammadde+fiyat&hl=tr&gl=TR&ceid=TR:tr"),
 ]
 
 def fetch_sector_news():
@@ -143,32 +171,55 @@ def build_analysis_prompt(fin_data, news_items, today_str):
             fin_summary.append(f"- {lbl}: {d['price']} (değişim: %{d['change']:+.2f})")
 
     news_text = ""
-    for n in news_items[:20]:
+    for n in news_items[:10]:
         news_text += f"[{n['source'].upper()}] {n['title']}\n"
         if n["summary"]:
-            news_text += f"  Özet: {n['summary'][:200]}\n"
+            news_text += f"  Özet: {n['summary'][:100]}\n"
 
     prompt = f"""Sen Türkiye'nin önde gelen satınalma ve uluslararası ticaret uzmanısın.
 Bugün {today_str} tarihli günlük bülteni hazırlıyorsun.
-Şirketi: Gümuşsuyu (halı, tekstil hammaddeleri ithalatçısı — PP, PTA, MEG, viskoz, polyester)
+Şirket: Gümuşsuyu (halı, tekstil hammaddeleri ithalatçısı — PP, PTA, MEG, viskoz, polyester)
 
 ──── FİNANSAL VERİLER (otomatik çekildi) ────
 {chr(10).join(fin_summary)}
 
-──── GÜNCEL HABERLER (Fibre2Fashion, ChemOrbis, Sedat Sezer, Bloomberg) ────
+──── GÜNCEL HABERLER ────
 {news_text}
 
-Aşağıdaki bölümleri Türkçe olarak hazırla. Her bölüm için JSON formatında yanıt ver.
+──── ANALİZ TALİMATLARI ────
+1. UPSTREAM PROXY: Brent/Naphtha → Propilen → PP zincirini analiz et. 
+   Brent hareketi PP için 4-8 hafta öncül sinyal verir. Web'den güncel Naphtha (Singapur/ARA) fiyatını ara.
+2. DALIAN FUTURES: Çin Dalian PP futures'ını web'den ara — Asya talep yönünü belirle.
+3. ÜRETİCİ HABERLERİ: SABIC, Borealis, LyondellBasell'den kapasite/force majeure/bakım haberi var mı? Ara.
+4. DREWRY & FREİGHTOS: Güncel World Container Index ve Freightos Baltic Index değerlerini ara.
+5. ICIS/POLYMERUPDATE/CHEMANALYST: Bu kaynakların serbest PP/PTA/MEG başlıklarını ara ve değerlendir.
+
+Aşağıdaki JSON formatında yanıt ver:
 
 {{
-  "ozet": "3-4 cümle yönetici özeti. Bugünün en kritik 2-3 gelişmesi.",
+  "ozet": "3-4 cümle yönetici özeti. Upstream proxy sinyali, Asya talebi ve kritik üretici haberleri dahil.",
+
+  "upstream_proxy": {{
+    "naphtha_singapur": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "PP fiyatına 4-8 haftalık etkisi"}},
+    "naphtha_ara": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Avrupa naphtha durumu"}},
+    "propilen": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "PP hammaddesi doğrudan etki"}}
+  }},
+
+  "asya_sinyali": {{
+    "dalian_pp_futures": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin talep yönü"}},
+    "usd_cny": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin'den ithalat maliyet etkisi"}}
+  }},
+
+  "uretici_sinyalleri": [
+    {{"uretici": "SABIC/Borealis/LyondellBasell vb.", "haber": "...", "etki": "arz üzerine etkisi"}}
+  ],
 
   "dunya_gundemi": [
-    {{"baslik": "haber başlığı", "kaynak": "kaynak adı", "onemi": "satınalma/ithalat açısından önemi 1 cümle"}}
+    {{"baslik": "...", "kaynak": "...", "onemi": "satınalma/ithalat açısından önemi"}}
   ],
 
   "hammadde_analiz": {{
-    "pp": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "güncel yorum"}},
+    "pp": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "upstream proxy ve Dalian sinyali dahil yorum"}},
     "pta": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
     "meg": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
     "akrilonitril": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "..."}},
@@ -178,23 +229,30 @@ Aşağıdaki bölümleri Türkçe olarak hazırla. Her bölüm için JSON format
   }},
 
   "lojistik": {{
-    "konteyner_40hq": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin→Türkiye güncel durum"}}
+    "drewry_wci": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Drewry World Container Index"}},
+    "freightos_fbi": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Freightos Baltic Index"}},
+    "konteyner_40hq": {{"fiyat": "...", "yon": "↑/→/↓", "yorum": "Çin→Türkiye pratik maliyet"}}
   }},
 
   "hali_sektoru": {{
     "gelismeler": ["madde 1", "madde 2", "madde 3"],
-    "hammadde_etkisi": "hammadde fiyatlarının halı sektörüne etkisi"
+    "hammadde_etkisi": "PP/polyester fiyatlarının halı üretimine etkisi"
   }},
 
   "sektorel_analiz": {{
     "baslik": "günün en kritik sektörel başlığı",
     "maddeler": ["madde 1", "madde 2", "madde 3"],
-    "oneri": "satınalma ekibi için somut aksiyon önerisi"
+    "oneri": "satınalma ekibi için somut aksiyon önerisi — stok, zamanlama, tedarikçi"
   }},
 
-  "fibre2fashion_ozet": "Fibre2Fashion'dan bugünün en önemli 1-2 gelişmesi",
-  "chemorbis_ozet": "ChemOrbis'ten PP/PTA/MEG için kritik fiyat hareketi",
-  "sedatsezer_ozet": "Sedat Sezer'den varsa güncel yorum/video özeti"
+  "kaynak_ozetleri": {{
+    "icis": "ICIS'ten PP/PTA/MEG kritik başlık",
+    "polymerupdate": "Polymerupdate'ten güncel fiyat hareketi",
+    "chemanalyst": "ChemAnalyst'ten öne çıkan analiz",
+    "fibre2fashion": "Fibre2Fashion'dan tekstil/lif gelişmesi",
+    "chemorbis": "ChemOrbis'ten polimer piyasa yorumu",
+    "sedatsezer": "Sedat Sezer'den güncel video/yorum özeti"
+  }}
 }}
 
 SADECE JSON döndür. Hiçbir açıklama veya markdown ekleme."""
@@ -214,14 +272,23 @@ def run_claude_analysis(prompt):
         log.info("  Claude API'ye istek gönderiliyor...")
         response = client.messages.create(
             model="claude-sonnet-4-5",
-            max_tokens=4000,
+            max_tokens=2000,
             tools=[{"type": "web_search_20250305", "name": "web_search"}],
             system=(
                 "Sen Türkiye'nin en iyi satınalma ve hammadde piyasası uzmanısın. "
-                "PP, PTA, MEG, viskoz, polyester, navlun ve halı sektörü konularında "
-                "derinlemesine bilgin var. Web search kullanarak güncel verileri doğrula. "
-                "Fibre2Fashion, ChemOrbis ve Sedat Sezer kanallarını öncelikli kaynak olarak kullan. "
-                "Yanıtını SADECE geçerli JSON formatında ver."
+                "PP, PTA, MEG, viskoz, polyester, navlun ve halı sektörü konularında derinlemesine bilgin var.\n\n"
+                "ANALİZ ÇERÇEVENİ:\n"
+                "1. UPSTREAM PROXY: Brent petrol → Naphtha (Singapur/ARA) → Propilen → PP zincirini takip et. "
+                "Brent/naphtha hareketi PP fiyatının 4-8 hafta öncül göstergesidir.\n"
+                "2. ASYA FUTURES: Çin Dalian Commodity Exchange PP futures fiyatları Asya talep sinyalidir. "
+                "USD/CNY paritesi Çin'den ithalat maliyetini doğrudan etkiler.\n"
+                "3. ÜRETİCİ SİNYALLERİ: SABIC, Borealis, LyondellBasell'in kapasite, force majeure veya "
+                "bakım duruşu haberlerini arz kısıtı sinyali olarak değerlendir.\n"
+                "4. LOJİSTİK: Drewry World Container Index ve Freightos Baltic Index'i landed cost "
+                "(nihai teslim maliyeti) hesabının freight bileşeni olarak kullan.\n"
+                "5. HABER KAYNAKLARI: ICIS, Polymerupdate, ChemAnalyst serbest başlıklarını, "
+                "ChemOrbis ve Fibre2Fashion analizlerini, Sedat Sezer yorumlarını önceliklendir.\n\n"
+                "Web search kullanarak güncel verileri doğrula. Yanıtını SADECE geçerli JSON formatında ver."
             ),
             messages=[{"role": "user", "content": prompt}],
         )
@@ -271,12 +338,14 @@ def build_html(fin, analysis, today_str):
     # Finansal satırlar
     fin_rows = ""
     fin_map = [
-        ("usd_try",     "USD/TRY",       "₺"),
-        ("eur_try",     "EUR/TRY",       "₺"),
-        ("gold_oz",     "Altın Ons",     " $"),
-        ("gold_gram_tl","Gram Altın",    " ₺"),
-        ("brent",       "Brent Petrol",  " $"),
-        ("cotton",      "Pamuk ICE",     " c/lb"),
+        ("usd_try",     "USD/TRY",            "₺"),
+        ("eur_try",     "EUR/TRY",            "₺"),
+        ("usd_cny",     "USD/CNY",            "¥"),
+        ("gold_oz",     "Altın Ons",          " $"),
+        ("gold_gram_tl","Gram Altın",         " ₺"),
+        ("brent",       "Brent Petrol",       " $"),
+        ("wti",         "WTI Petrol",         " $"),
+        ("cotton",      "Pamuk ICE",          " c/lb"),
     ]
     for i, (key, label, sfx) in enumerate(fin_map):
         if key not in fin:
@@ -324,7 +393,22 @@ def build_html(fin, analysis, today_str):
         </li>"""
 
     # Lojistik
-    loj = analysis.get("lojistik", {}).get("konteyner_40hq", {})
+    loj     = analysis.get("lojistik", {})
+    loj_40  = loj.get("konteyner_40hq", {})
+    drewry  = loj.get("drewry_wci", {})
+    fbalt   = loj.get("freightos_fbi", {})
+
+    # Upstream proxy
+    ups = analysis.get("upstream_proxy", {})
+    asya = analysis.get("asya_sinyali", {})
+
+    # Üretici sinyalleri
+    uretici_list = analysis.get("uretici_sinyalleri", [])
+    uretici_html = "".join(
+        f"<li style='margin-bottom:6px;'><b>{u.get('uretici','')}</b>: {u.get('haber','')} "
+        f"<span style='color:#e53935;'>→ {u.get('etki','')}</span></li>"
+        for u in uretici_list
+    ) or "<li>Güncel üretici haberi tespit edilmedi.</li>"
 
     # Halı sektörü
     hali = analysis.get("hali_sektoru", {})
@@ -335,9 +419,13 @@ def build_html(fin, analysis, today_str):
     sek_html = "".join(f"<li style='margin-bottom:6px;'>{m}</li>" for m in sek.get("maddeler", []))
 
     # Kaynak özetleri
-    f2f    = analysis.get("fibre2fashion_ozet", "—")
-    chem   = analysis.get("chemorbis_ozet", "—")
-    sedat  = analysis.get("sedatsezer_ozet", "—")
+    kaynaklar = analysis.get("kaynak_ozetleri", {})
+    f2f    = kaynaklar.get("fibre2fashion", analysis.get("fibre2fashion_ozet", "—"))
+    chem   = kaynaklar.get("chemorbis",     analysis.get("chemorbis_ozet", "—"))
+    sedat  = kaynaklar.get("sedatsezer",    analysis.get("sedatsezer_ozet", "—"))
+    icis_t = kaynaklar.get("icis", "—")
+    polym  = kaynaklar.get("polymerupdate", "—")
+    chem_a = kaynaklar.get("chemanalyst", "—")
 
     html = f"""<!DOCTYPE html>
 <html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -361,8 +449,8 @@ def build_html(fin, analysis, today_str):
 
 <!-- KAYNAK ÖZETLERİ -->
 <tr><td style="padding:16px 30px 6px;">
-  <h2 style="margin:0 0 10px;color:#5c6bc0;font-size:14px;border-bottom:1px solid #e8eaf6;padding-bottom:6px;">🔍 KAYNAK ÖZETLERI</h2>
-  <table width="100%" cellpadding="8" cellspacing="4">
+  <h2 style="margin:0 0 10px;color:#5c6bc0;font-size:14px;border-bottom:1px solid #e8eaf6;padding-bottom:6px;">🔍 KAYNAK ÖZETLERİ</h2>
+  <table width="100%" cellpadding="4" cellspacing="4">
     <tr>
       <td width="33%" style="background:#fff8e1;border-radius:6px;padding:10px;font-size:11px;vertical-align:top;">
         <div style="font-weight:bold;color:#f57f17;margin-bottom:4px;">📊 ChemOrbis</div>
@@ -377,7 +465,79 @@ def build_html(fin, analysis, today_str):
         <div style="color:#555;">{sedat}</div>
       </td>
     </tr>
+    <tr>
+      <td style="background:#e3f2fd;border-radius:6px;padding:10px;font-size:11px;vertical-align:top;">
+        <div style="font-weight:bold;color:#1565c0;margin-bottom:4px;">📰 ICIS</div>
+        <div style="color:#555;">{icis_t}</div>
+      </td>
+      <td style="background:#f3e5f5;border-radius:6px;padding:10px;font-size:11px;vertical-align:top;">
+        <div style="font-weight:bold;color:#6a1b9a;margin-bottom:4px;">🔬 Polymerupdate</div>
+        <div style="color:#555;">{polym}</div>
+      </td>
+      <td style="background:#e0f2f1;border-radius:6px;padding:10px;font-size:11px;vertical-align:top;">
+        <div style="font-weight:bold;color:#00695c;margin-bottom:4px;">📈 ChemAnalyst</div>
+        <div style="color:#555;">{chem_a}</div>
+      </td>
+    </tr>
   </table>
+</td></tr>
+
+<!-- UPSTREAM PROXY — PP Öncül Göstergesi -->
+<tr><td style="padding:16px 30px 10px;">
+  <h2 style="margin:0 0 6px;color:#4527a0;font-size:15px;border-bottom:2px solid #ede7f6;padding-bottom:6px;">⛽ UPSTREAM PROXY — PP Öncül Göstergesi (4-8 Hafta)</h2>
+  <p style="margin:0 0 8px;font-size:11px;color:#888;">Brent → Naphtha → Propilen → PP zinciri: Naphtha hareketleri PP fiyatının 4-8 hafta öncül sinyalidir.</p>
+  <table width="100%" cellpadding="8" cellspacing="0" style="font-size:12px;border-collapse:collapse;border:1px solid #e0e0e0;">
+    <tr style="background:#4527a0;color:#fff;">
+      <th align="left" style="padding:10px;">Gösterge</th>
+      <th align="left" style="padding:10px;">Fiyat</th>
+      <th align="center" style="padding:10px;">Yön</th>
+      <th align="left" style="padding:10px;">PP'ye Etkisi</th>
+    </tr>
+    <tr>
+      <td><b>Naphtha Singapur</b></td>
+      <td>{ups.get('naphtha_singapur',{{}}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(ups.get('naphtha_singapur',{{}}).get('yon','→'))};">{ups.get('naphtha_singapur',{{}}).get('yon','→')}</td>
+      <td>{ups.get('naphtha_singapur',{{}}).get('yorum','—')}</td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td><b>Naphtha ARA</b></td>
+      <td>{ups.get('naphtha_ara',{{}}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(ups.get('naphtha_ara',{{}}).get('yon','→'))};">{ups.get('naphtha_ara',{{}}).get('yon','→')}</td>
+      <td>{ups.get('naphtha_ara',{{}}).get('yorum','—')}</td>
+    </tr>
+    <tr>
+      <td><b>Propilen</b></td>
+      <td>{ups.get('propilen',{{}}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(ups.get('propilen',{{}}).get('yon','→'))};">{ups.get('propilen',{{}}).get('yon','→')}</td>
+      <td>{ups.get('propilen',{{}}).get('yorum','—')}</td>
+    </tr>
+  </table>
+  <table width="100%" cellpadding="8" cellspacing="0" style="font-size:12px;border-collapse:collapse;border:1px solid #e0e0e0;margin-top:6px;">
+    <tr style="background:#37474f;color:#fff;">
+      <th align="left" style="padding:10px;">Asya Sinyali</th>
+      <th align="left" style="padding:10px;">Seviye</th>
+      <th align="center" style="padding:10px;">Yön</th>
+      <th align="left" style="padding:10px;">Yorum</th>
+    </tr>
+    <tr>
+      <td><b>Dalian PP Futures</b></td>
+      <td>{asya.get('dalian_pp_futures',{{}}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(asya.get('dalian_pp_futures',{{}}).get('yon','→'))};">{asya.get('dalian_pp_futures',{{}}).get('yon','→')}</td>
+      <td>{asya.get('dalian_pp_futures',{{}}).get('yorum','—')}</td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td><b>USD/CNY</b></td>
+      <td>{asya.get('usd_cny',{{}}).get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(asya.get('usd_cny',{{}}).get('yon','→'))};">{asya.get('usd_cny',{{}}).get('yon','→')}</td>
+      <td>{asya.get('usd_cny',{{}}).get('yorum','—')}</td>
+    </tr>
+  </table>
+</td></tr>
+
+<!-- ÜRETİCİ SİNYALLERİ -->
+<tr><td style="padding:16px 30px 10px;">
+  <h2 style="margin:0 0 10px;color:#bf360c;font-size:15px;border-bottom:2px solid #fbe9e7;padding-bottom:6px;">🏭 ÜRETİCİ SİNYALLERİ (SABIC · Borealis · LyondellBasell)</h2>
+  <ul style="margin:0;padding-left:16px;font-size:12px;color:#333;line-height:1.8;">{uretici_html}</ul>
 </td></tr>
 
 <!-- DÜNYA GÜNDEMİ -->
@@ -423,10 +583,22 @@ def build_html(fin, analysis, today_str):
       <th align="left">Yorum</th>
     </tr>
     <tr>
-      <td><b>40HQ Konteyner</b></td>
-      <td>{loj.get('fiyat','—')}</td>
-      <td style="font-size:18px;color:{trend_color(loj.get('yon','→'))};">{loj.get('yon','→')}</td>
-      <td>{loj.get('yorum','—')}</td>
+      <td><b>Drewry WCI</b></td>
+      <td>{drewry.get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(drewry.get('yon','→'))};">{drewry.get('yon','→')}</td>
+      <td>{drewry.get('yorum','—')}</td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td><b>Freightos Baltic Index</b></td>
+      <td>{fbalt.get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(fbalt.get('yon','→'))};">{fbalt.get('yon','→')}</td>
+      <td>{fbalt.get('yorum','—')}</td>
+    </tr>
+    <tr>
+      <td><b>40HQ Çin→Türkiye</b></td>
+      <td>{loj_40.get('fiyat','—')}</td>
+      <td style="font-size:18px;color:{trend_color(loj_40.get('yon','→'))};">{loj_40.get('yon','→')}</td>
+      <td>{loj_40.get('yorum','—')}</td>
     </tr>
   </table>
   <p style="font-size:11px;color:#888;margin-top:6px;">⚠️ Navlun fiyatları liman, taşıyıcı ve ek ücretlere göre değişkenlik gösterir.</p>
@@ -480,11 +652,22 @@ def send_email(cfg, subject, html_body):
 
     ctx = ssl.create_default_context()
     try:
-        with smtplib.SMTP_SSL(smtp_srv, smtp_port, context=ctx) as srv:
-            srv.login(sender, password)
-            srv.sendmail(sender, recipients, msg.as_string())
-        log.info(f"E-posta {len(recipients)} kişiye gönderildi.")
-        return True
+        # Önce port 587 (TLS) dene — Railway'de 465 engellenebilir
+        try:
+            with smtplib.SMTP(smtp_srv, 587) as srv:
+                srv.ehlo()
+                srv.starttls(context=ctx)
+                srv.login(sender, password)
+                srv.sendmail(sender, recipients, msg.as_string())
+            log.info(f"E-posta {len(recipients)} kişiye gönderildi (port 587).")
+            return True
+        except Exception as e1:
+            log.warning(f"Port 587 başarısız: {e1} — port 465 deneniyor...")
+            with smtplib.SMTP_SSL(smtp_srv, 465, context=ctx) as srv:
+                srv.login(sender, password)
+                srv.sendmail(sender, recipients, msg.as_string())
+            log.info(f"E-posta {len(recipients)} kişiye gönderildi (port 465).")
+            return True
     except Exception as e:
         log.error(f"E-posta gönderilemedi: {e}")
         return False
@@ -554,4 +737,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
