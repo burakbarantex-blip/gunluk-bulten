@@ -203,9 +203,12 @@ def run_claude_analysis(prompt):
 
     try:
         log.info("  Claude API'ye istek gönderiliyor...")
-        response = client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=3000,
+        import time
+        for attempt in range(3):
+            try:
+                response = client.messages.create(
+                    model="claude-sonnet-4-5",
+                    max_tokens=4000,
             system=(
                 "Sen Türkiye'nin en iyi satınalma ve hammadde piyasası uzmanısın. "
                 "PP, PTA, MEG, viskoz, polyester, navlun ve halı sektörü konularında derinlemesine bilgin var.\n\n"
@@ -224,7 +227,14 @@ def run_claude_analysis(prompt):
                 "5. KAYNAKLAR: ICIS, Polymerupdate, ChemAnalyst, Fibre2Fashion, ChemOrbis, Sedat Sezer\n"
             ),
             messages=[{"role": "user", "content": prompt}],
-        )
+                )
+                break  # Başarılıysa döngüden çık
+            except Exception as retry_e:
+                if "429" in str(retry_e) and attempt < 2:
+                    log.warning(f"Rate limit — {30*(attempt+1)}sn bekleniyor...")
+                    time.sleep(30 * (attempt + 1))
+                else:
+                    raise retry_e
 
         # Yanıtı parse et
         full_text = ""
@@ -240,26 +250,33 @@ def run_claude_analysis(prompt):
             clean = clean.split("```")[0]
         clean = clean.strip()
 
-        # Eğer JSON kesilmişse sonuna kapanış ekle
+        # JSON onarım — kesilmiş JSON'u düzelt
         if not clean.endswith("}"):
-            # Açık string varsa kapat
-            open_strings = clean.count('"') % 2
-            if open_strings:
-                clean += '"'
-            # Açık obje/array sayısını hesapla ve kapat
+            # Son geçerli JSON objesini bul
             depth = 0
             in_string = False
-            for ch in clean:
-                if ch == '"' and not in_string:
-                    in_string = True
-                elif ch == '"' and in_string:
-                    in_string = False
+            escape = False
+            last_valid = 0
+            for i, ch in enumerate(clean):
+                if escape:
+                    escape = False
+                    continue
+                if ch == '\\' and in_string:
+                    escape = True
+                    continue
+                if ch == '"' and not escape:
+                    in_string = not in_string
                 elif not in_string:
                     if ch in '{[':
                         depth += 1
                     elif ch in '}]':
                         depth -= 1
-            # Eksik kapanışları ekle
+                        if depth == 0:
+                            last_valid = i + 1
+            # Açık string kapat
+            if in_string:
+                clean += '"'
+            # Açık objeleri kapat
             while depth > 0:
                 clean += "}"
                 depth -= 1
