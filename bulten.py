@@ -595,52 +595,39 @@ def build_html(fin, analysis, today_str):
 </body></html>"""
     return html
 
-# ─── 5. E-POSTA GÖNDER (Resend API) ───────────────────────────────────────
+# ─── 5. E-POSTA GÖNDER (SendGrid API) ─────────────────────────────────────
 
 def send_email(cfg, subject, html_body):
     recipients = cfg["recipients"]
     sender     = cfg["email"]["sender"]
 
-    # Resend API key — Railway Variables'dan al
-    resend_key = os.environ.get("RESEND_API_KEY")
-    if not resend_key:
-        log.error("RESEND_API_KEY ortam değişkeni bulunamadı!")
+    sendgrid_key = os.environ.get("SENDGRID_API_KEY")
+    if not sendgrid_key:
+        log.error("SENDGRID_API_KEY ortam değişkeni bulunamadı!")
         return False
 
     try:
-        # Resend API'ye HTTP POST — her alıcıya ayrı gönder
         headers = {
-            "Authorization": f"Bearer {resend_key}",
+            "Authorization": f"Bearer {sendgrid_key}",
             "Content-Type": "application/json",
         }
-        success_count = 0
-        for recipient in recipients:
-            # Resend ücretsiz planda sadece kayıtlı adrese gönderilebilir
-            # Domain doğrulanana kadar test adresi kullan
-            test_recipient = os.environ.get("TEST_EMAIL", recipient)
-            payload = {
-                "from": "Piyasa Analiz <onboarding@resend.dev>",
-                "to": [test_recipient],
-                "subject": subject,
-                "html": html_body,
-            }
-            resp = requests.post(
-                "https://api.resend.com/emails",
-                json=payload,
-                headers=headers,
-                timeout=30,
-            )
-            if resp.status_code in (200, 201):
-                success_count += 1
-                log.info(f"  ✓ Gönderildi: {recipient}")
-            else:
-                log.error(f"  ✗ Hata [{recipient}]: {resp.status_code} — {resp.text}")
-
-        if success_count > 0:
-            log.info(f"E-posta {success_count}/{len(recipients)} kişiye gönderildi.")
+        payload = {
+            "personalizations": [{"to": [{"email": r} for r in recipients]}],
+            "from": {"email": sender, "name": "Piyasa Analiz"},
+            "subject": subject,
+            "content": [{"type": "text/html", "value": html_body}],
+        }
+        resp = requests.post(
+            "https://api.sendgrid.com/v3/mail/send",
+            json=payload,
+            headers=headers,
+            timeout=30,
+        )
+        if resp.status_code == 202:
+            log.info(f"E-posta {len(recipients)} kişiye gönderildi (SendGrid).")
             return True
         else:
-            log.error("Hiçbir alıcıya gönderilemedi.")
+            log.error(f"SendGrid hatası: {resp.status_code} — {resp.text}")
             return False
 
     except Exception as e:
@@ -712,5 +699,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
