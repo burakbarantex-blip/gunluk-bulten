@@ -28,6 +28,12 @@ def next_run_time():
 
 
 def run_bulten():
+    # Hafta sonu kontrolü (0=Pazartesi, 6=Pazar)
+    bugun = datetime.now(TZ_TR).weekday()
+    if bugun >= 5:  # Cumartesi=5, Pazar=6
+        log.info(f"🗓️ Hafta sonu — bülten gönderilmedi.")
+        return
+
     log.info("📧 Bülten v2.0 çalıştırılıyor...")
     try:
         result = subprocess.run(
