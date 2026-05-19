@@ -170,6 +170,11 @@ def build_analysis_prompt(fin_data, news_items, today_str):
             d = fin_data[k]
             fin_summary.append(f"- {lbl}: {d['price']} (değişim: %{d['change']:+.2f})")
 
+    # Haberleri kısa özet olarak hazırla
+    news_text = ""
+    for n in news_items[:5]:
+        news_text += f"- [{n['source'].upper()}] {n['title']}\n"
+
     prompt = f"""Tarih: {today_str}
 Şirket: Gümuşsuyu (halı/tekstil hammadde ithalatçısı — PP, PTA, MEG, viskoz, polyester)
 
