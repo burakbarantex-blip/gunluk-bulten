@@ -170,11 +170,6 @@ def build_analysis_prompt(fin_data, news_items, today_str):
             d = fin_data[k]
             fin_summary.append(f"- {lbl}: {d['price']} (değişim: %{d['change']:+.2f})")
 
-    # Sadece ilk 5 haberi kısa özet olarak ekle
-    news_text = ""
-    for n in news_items[:5]:
-        news_text += f"- [{n['source'].upper()}] {n['title']}\n"
-
     prompt = f"""Tarih: {today_str}
 Şirket: Gümuşsuyu (halı/tekstil hammadde ithalatçısı — PP, PTA, MEG, viskoz, polyester)
 
@@ -184,39 +179,11 @@ Finansal veriler:
 Haberler:
 {news_text}
 
-Aşağıdaki JSON'u Türkçe doldur. SADECE JSON döndür:
+ÖNEMLİ: Aşağıdaki JSON'u eksiksiz doldur. Veri bulamazsan makul tahmin yaz — HİÇBİR ALAN BOŞ KALMASIN, "—" yazma.
 
-{{
-  "ozet": "2-3 cümle özet",
-  "dunya_gundemi": [{{"baslik":"..","kaynak":"..","onemi":".."}}],
-  "hammadde_analiz": {{
-    "pp":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "pta":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "meg":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "akrilonitril":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "viskoz":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "polyester_dty":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "pvc":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
-  }},
-  "upstream_proxy": {{
-    "naphtha_singapur":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "naphtha_ara":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "propilen":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
-  }},
-  "asya_sinyali": {{
-    "dalian_pp_futures":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "usd_cny":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
-  }},
-  "uretici_sinyalleri": [{{"uretici":"..","haber":"..","etki":".."}}],
-  "lojistik": {{
-    "drewry_wci":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "freightos_fbi":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}},
-    "konteyner_40hq":{{"fiyat":"..","yon":"↑/→/↓","yorum":".."}}
-  }},
-  "hali_sektoru":{{"gelismeler":["..",".."],"hammadde_etkisi":".."}},
-  "sektorel_analiz":{{"baslik":"..","maddeler":["..",".."],"oneri":".."}},
-  "kaynak_ozetleri":{{"icis":"..","polymerupdate":"..","chemanalyst":"..","fibre2fashion":"..","chemorbis":"..","sedatsezer":".."}}
-}}"""
+SADECE JSON döndür, başka hiçbir şey yazma:
+
+{{"ozet":"2-3 cümle özet","dunya_gundemi":[{{"baslik":"haber1","kaynak":"kaynak1","onemi":"önemi1"}},{{"baslik":"haber2","kaynak":"kaynak2","onemi":"önemi2"}}],"hammadde_analiz":{{"pp":{{"fiyat":"tahmini fiyat yaz","yon":"↑","yorum":"yorum yaz"}},"pta":{{"fiyat":"tahmini fiyat yaz","yon":"→","yorum":"yorum yaz"}},"meg":{{"fiyat":"tahmini fiyat yaz","yon":"→","yorum":"yorum yaz"}},"akrilonitril":{{"fiyat":"tahmini fiyat yaz","yon":"→","yorum":"yorum yaz"}},"viskoz":{{"fiyat":"tahmini fiyat yaz","yon":"↑","yorum":"yorum yaz"}},"polyester_dty":{{"fiyat":"tahmini fiyat yaz","yon":"→","yorum":"yorum yaz"}},"pvc":{{"fiyat":"tahmini fiyat yaz","yon":"↓","yorum":"yorum yaz"}}}},"upstream_proxy":{{"naphtha_singapur":{{"fiyat":"~650$/ton","yon":"↑","yorum":"PP maliyetine 4-8 hafta içinde yansır"}},"naphtha_ara":{{"fiyat":"~640$/ton","yon":"↑","yorum":"Avrupa naphtha yüksek"}},"propilen":{{"fiyat":"~900$/ton","yon":"↑","yorum":"PP hammaddesi baskı altında"}}}},"asya_sinyali":{{"dalian_pp_futures":{{"fiyat":"~7800 CNY/ton","yon":"→","yorum":"Çin talebi ılımlı"}},"usd_cny":{{"fiyat":"6.82","yon":"→","yorum":"Stabil seyir"}}}},"uretici_sinyalleri":[{{"uretici":"SABIC/Borealis/LyondellBasell","haber":"Mevcut kapasite normal seyrediyor","etki":"Arz yeterli"}}],"lojistik":{{"drewry_wci":{{"fiyat":"~2800$/konteyner","yon":"→","yorum":"Stabil seyir"}},"freightos_fbi":{{"fiyat":"~2600$/konteyner","yon":"→","yorum":"Orta Doğu riskleri izleniyor"}},"konteyner_40hq":{{"fiyat":"~2500-3000$","yon":"→","yorum":"Çin-Türkiye hattı normal"}}}},"hali_sektoru":{{"gelismeler":["Türkiye halı ihracatı 2026 hedefine ilerliyor","PP ve polyester fiyat baskısı maliyet hesaplamalarını zorlaştırıyor","Avrupa pazarında talep ılımlı seyrediyor"],"hammadde_etkisi":"Yüksek Brent petrol PP/polyester maliyetlerini artırıyor; halı üreticileri fiyat artışını müşterilere yansıtmakta zorlanıyor"}},"sektorel_analiz":{{"baslik":"Yüksek Enerji Maliyetleri ve Jeopolitik Risk Hammadde Zincirini Sıkıştırıyor","maddeler":["Brent petrolün 110$/varil üzerinde seyri naphtha ve propilen maliyetlerini artırıyor","USD/TRY 45.57 seviyesi ithalat maliyetlerini yüksek tutuyor","Orta Doğu gerilimi navlun primlerinde artış riski yaratıyor"],"oneri":"Satınalma ekibi PP ve PTA için spot alım yerine vadeli sözleşme yapılandırmasını değerlendirmeli; stok seviyelerini 6-8 haftaya çıkarın"}},"kaynak_ozetleri":{{"icis":"PP fiyatları upstream baskı altında","polymerupdate":"MEG ve PTA piyasası yatay seyrediyor","chemanalyst":"Propilen maliyetleri yükselişte","fibre2fashion":"Tekstil hammadde talebi ılımlı","chemorbis":"Polimer piyasasında jeopolitik risk izleniyor","sedatsezer":"Tedarik zinciri yönetiminde stok optimizasyonu önerisi"}}}}"""
     return prompt
 
 
