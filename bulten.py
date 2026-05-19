@@ -256,16 +256,40 @@ def run_claude_analysis(prompt):
         # Yanıtı parse et
         full_text = ""
         for block in response.content:
-            if block.type == "text":
+            if hasattr(block, 'text'):
                 full_text += block.text
 
         # JSON temizle
         clean = full_text.strip()
-        if clean.startswith("```"):
-            clean = clean.split("```")[1]
-            if clean.startswith("json"):
-                clean = clean[4:]
-        clean = clean.strip().rstrip("```").strip()
+        if "```json" in clean:
+            clean = clean.split("```json")[1]
+        if "```" in clean:
+            clean = clean.split("```")[0]
+        clean = clean.strip()
+
+        # Eğer JSON kesilmişse sonuna kapanış ekle
+        if not clean.endswith("}"):
+            # Açık string varsa kapat
+            open_strings = clean.count('"') % 2
+            if open_strings:
+                clean += '"'
+            # Açık obje/array sayısını hesapla ve kapat
+            depth = 0
+            in_string = False
+            for ch in clean:
+                if ch == '"' and not in_string:
+                    in_string = True
+                elif ch == '"' and in_string:
+                    in_string = False
+                elif not in_string:
+                    if ch in '{[':
+                        depth += 1
+                    elif ch in '}]':
+                        depth -= 1
+            # Eksik kapanışları ekle
+            while depth > 0:
+                clean += "}"
+                depth -= 1
 
         result = json.loads(clean)
         log.info("  Claude analizi başarıyla tamamlandı.")
@@ -699,4 +723,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
