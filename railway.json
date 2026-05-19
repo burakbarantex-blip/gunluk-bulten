@@ -4,7 +4,7 @@
         "builder": "NIXPACKS"
     },
     "deploy": {
-        "startCommand": "python bulten.py",
+        "startCommand": "python bulten_scheduler.py",
         "restartPolicyType": "ON_FAILURE",
         "restartPolicyMaxRetries": 3
     }
