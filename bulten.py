@@ -242,7 +242,7 @@ def run_claude_analysis(prompt):
             if hasattr(block, 'text'):
                 full_text += block.text
 
-        # JSON temizle
+        # JSON temizle — sadece ilk { ... } bloğunu al
         clean = full_text.strip()
         if "```json" in clean:
             clean = clean.split("```json")[1]
@@ -250,33 +250,41 @@ def run_claude_analysis(prompt):
             clean = clean.split("```")[0]
         clean = clean.strip()
 
-        # JSON onarım — kesilmiş JSON'u düzelt
+        # İlk { ile başlayan pozisyonu bul
+        start = clean.find('{')
+        if start == -1:
+            raise ValueError("JSON bulunamadı")
+        clean = clean[start:]
+
+        # Kapanış } pozisyonunu bul — açık/kapalı parantez sayarak
+        depth = 0
+        in_string = False
+        escape = False
+        end_pos = len(clean)
+        for i, ch in enumerate(clean):
+            if escape:
+                escape = False
+                continue
+            if ch == '\\' and in_string:
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+            elif not in_string:
+                if ch == '{':
+                    depth += 1
+                elif ch == '}':
+                    depth -= 1
+                    if depth == 0:
+                        end_pos = i + 1
+                        break
+
+        clean = clean[:end_pos]
+
+        # Hâlâ kesilmişse kapat
         if not clean.endswith("}"):
-            # Son geçerli JSON objesini bul
-            depth = 0
-            in_string = False
-            escape = False
-            last_valid = 0
-            for i, ch in enumerate(clean):
-                if escape:
-                    escape = False
-                    continue
-                if ch == '\\' and in_string:
-                    escape = True
-                    continue
-                if ch == '"' and not escape:
-                    in_string = not in_string
-                elif not in_string:
-                    if ch in '{[':
-                        depth += 1
-                    elif ch in '}]':
-                        depth -= 1
-                        if depth == 0:
-                            last_valid = i + 1
-            # Açık string kapat
             if in_string:
                 clean += '"'
-            # Açık objeleri kapat
             while depth > 0:
                 clean += "}"
                 depth -= 1
