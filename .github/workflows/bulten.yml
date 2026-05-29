@@ -2,15 +2,15 @@ name: Günlük Bülten
 
 on:
   schedule:
-    - - cron: '0 6 * * 1-5'
+    - cron: '0 6 * * 1-5'
   workflow_dispatch:
 
 jobs:
   bulten:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
